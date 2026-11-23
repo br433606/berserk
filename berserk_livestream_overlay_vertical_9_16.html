@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Berserk Stream Overlay - @morettizw</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cinzel Decorative & Cinzel for sharp gothic Berserk-inspired typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Core Dark Fantasy & Brutalist Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #030303;
+            font-family: 'Cinzel', serif;
+            transition: background-color 0.4s ease;
+        }
+
+        /* Transparent Mode for OBS Studio Browser Source */
+        body.obs-transparent {
+            background-color: transparent !important;
+        }
+
+        /* Vignette & Film Grain Texture for Manga/1997 Anime Atmosphere */
+        .eclipse-vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            background: radial-gradient(circle at 50% 24%, rgba(130, 0, 0, 0.16) 0%, rgba(10, 0, 0, 0.76) 52%, rgba(0, 0, 0, 0.97) 100%);
+            transition: opacity 0.4s ease;
+        }
+
+        body.obs-transparent .eclipse-vignette {
+            opacity: 0;
+        }
+
+        /* Subtle Manga Crosshatch / Grain Overlay */
+        .manga-grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0.055;
+            background-image: repeating-linear-gradient(
+                -45deg,
+                #000000 0px,
+                #000000 1px,
+                transparent 1px,
+                transparent 4px
+            );
+        }
+
+        body.obs-transparent .manga-grain {
+            opacity: 0.02;
+        }
+
+        /* Fullscreen Canvas Layer */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Berserk Gothic Main Title Styling & Glitch Effect */
+        .berserk-title-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .berserk-title {
+            font-family: 'Cinzel Decorative', 'Cinzel', serif;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            line-height: 1.08;
+            color: #c40000;
+            text-transform: uppercase;
+            /* Sharp white metallic highlight + deep blood shadow */
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.55);
+            text-shadow: 
+                0 0 2px rgba(255, 255, 255, 0.85),
+                0 4px 14px rgba(179, 0, 0, 0.85),
+                0 10px 35px rgba(0, 0, 0, 0.98);
+            position: relative;
+            z-index: 3;
+            animation: titleBreath 6s ease-in-out infinite;
+        }
+
+        /* White Inner Accent Highlight */
+        .berserk-title span.highlight-white {
+            color: #f4f4f4;
+            -webkit-text-stroke: 0px;
+            text-shadow: 
+                0 0 12px rgba(255, 26, 26, 0.9),
+                0 4px 18px rgba(0, 0, 0, 1);
+        }
+
+        /* Periodic Dark Distortion / Glitch Layers (Strictly Red, White, Black) */
+        .berserk-glitch-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Cinzel Decorative', 'Cinzel', serif;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            line-height: 1.08;
+            text-transform: uppercase;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .glitch-red {
+            color: #ff1a1a;
+            z-index: 2;
+            animation: berserkGlitchRed 7s infinite;
+        }
+
+        .glitch-white {
+            color: #e5e5e5;
+            z-index: 4;
+            animation: berserkGlitchWhite 7s infinite;
+        }
+
+        @keyframes titleBreath {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.012); filter: brightness(1.12); }
+        }
+
+        @keyframes berserkGlitchRed {
+            0%, 88%, 100% { opacity: 0; transform: translate(0, 0) skewX(0deg); clip-path: inset(0 0 0 0); }
+            89% { opacity: 0.85; transform: translate(-6px, 2px) skewX(-8deg); clip-path: inset(12% 0 58% 0); }
+            90% { opacity: 0.9; transform: translate(7px, -2px) skewX(10deg); clip-path: inset(62% 0 10% 0); }
+            91% { opacity: 0.4; transform: translate(-3px, 1px) skewX(-4deg); clip-path: inset(35% 0 38% 0); }
+            92% { opacity: 0; transform: translate(0, 0); }
+            95% { opacity: 0.8; transform: translate(5px, 0) skewX(6deg); clip-path: inset(20% 0 45% 0); }
+            96% { opacity: 0; }
+        }
+
+        @keyframes berserkGlitchWhite {
+            0%, 88%, 100% { opacity: 0; transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+            89.5% { opacity: 0.75; transform: translate(5px, -1px) skewX(7deg); clip-path: inset(45% 0 25% 0); }
+            90.5% { opacity: 0.8; transform: translate(-6px, 2px) skewX(-9deg); clip-path: inset(8% 0 70% 0); }
+            91.5% { opacity: 0; }
+            95.2% { opacity: 0.7; transform: translate(-4px, -1px); clip-path: inset(70% 0 5% 0); }
+            96.2% { opacity: 0; }
+        }
+
+        /* Blood Slash Divider Bar */
+        .blood-slash-bar {
+            height: 3px;
+            background: linear-gradient(90deg, transparent 0%, #b30000 22%, #ff1a1a 50%, rgba(255, 255, 255, 0.8) 65%, transparent 100%);
+            box-shadow: 0 0 14px rgba(255, 26, 26, 0.85);
+            position: relative;
+            animation: slashPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes slashPulse {
+            0%, 100% { width: 58%; opacity: 0.85; }
+            50% { width: 72%; opacity: 1; }
+        }
+
+        /* Streamer Handle Styling (@morettizw) */
+        .streamer-handle {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            color: #e6e6e6;
+            text-shadow: 
+                0 0 10px rgba(255, 26, 26, 0.85),
+                0 0 24px rgba(179, 0, 0, 0.95),
+                0 3px 10px #000000;
+            animation: handleGlow 3.8s ease-in-out infinite;
+        }
+
+        @keyframes handleGlow {
+            0%, 100% {
+                text-shadow: 0 0 8px rgba(255, 26, 26, 0.65), 0 0 20px rgba(179, 0, 0, 0.7), 0 3px 8px #000;
+                color: #d4d4d4;
+            }
+            50% {
+                text-shadow: 0 0 16px rgba(255, 26, 26, 1), 0 0 34px rgba(200, 0, 0, 0.95), 0 3px 10px #000;
+                color: #ffffff;
+            }
+        }
+
+        /* Brand of Sacrifice SVG Pulse Animation */
+        .brand-sacrifice-svg {
+            filter: drop-shadow(0 0 10px rgba(255, 26, 26, 0.9)) drop-shadow(0 0 24px rgba(179, 0, 0, 0.8));
+            animation: brandPulse 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes brandPulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 8px rgba(200, 0, 0, 0.75)) drop-shadow(0 0 18px rgba(140, 0, 0, 0.6));
+                opacity: 0.88;
+            }
+            45% {
+                transform: scale(1.06);
+                filter: drop-shadow(0 0 18px rgba(255, 26, 26, 1)) drop-shadow(0 0 40px rgba(255, 0, 0, 0.95));
+                opacity: 1;
+            }
+            55% {
+                transform: scale(1.02);
+            }
+            70% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 15px rgba(255, 26, 26, 0.95)) drop-shadow(0 0 32px rgba(200, 0, 0, 0.85));
+            }
+        }
+
+        /* Subtle Cinematic Float for Center Brand Focal Area */
+        .center-brand-float {
+            animation: cinematicFloat 7s ease-in-out infinite;
+        }
+
+        @keyframes cinematicFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-8px) scale(1.02); }
+        }
+
+        /* Auto-hiding Streamer Control Panel */
+        #control-dock {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            z-index: 50;
+            opacity: 0.15;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        #control-dock:hover,
+        #control-dock.pinned {
+            opacity: 1;
+        }
+
+        #control-dock.hidden-ui {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-black text-zinc-100 antialiased">
+
+    <!-- Background & Atmospheric Particle/Smoke Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Eclipse Dark Vignette & Manga Texture -->
+    <div class="eclipse-vignette"></div>
+    <div class="manga-grain"></div>
+
+    <!-- Main Vertical 9:16 (1080x1920) Stream Overlay Layout -->
+    <main class="relative z-10 w-full h-full flex flex-col items-center justify-between px-6 sm:px-12 py-12 sm:py-16">
+        
+        <!-- TOP SECTION: Eclipse Focal Header, Gothic Title & Streamer Handle -->
+        <section class="w-full flex flex-col items-center justify-center text-center pt-4 sm:pt-8 space-y-4 z-20">
+            
+            <!-- Top Subtle Dark Fantasy Tagline -->
+            <div class="flex items-center justify-center space-x-2.5 opacity-90">
+                <span class="inline-block w-2 h-2 rotate-45 bg-[#ff1a1a] shadow-[0_0_10px_#ff1a1a]"></span>
+                <span class="text-xs sm:text-sm md:text-base tracking-[0.42em] uppercase text-zinc-300 font-bold drop-shadow-[0_2px_6px_#000]">
+                    O ECLIPSE SE APROXIMA
+                </span>
+                <span class="inline-block w-2 h-2 rotate-45 bg-[#ff1a1a] shadow-[0_0_10px_#ff1a1a]"></span>
+            </div>
+
+            <!-- Main Gothic Title with Glitch & White Highlights -->
+            <div class="berserk-title-wrapper px-2">
+                <h1 class="berserk-title text-4xl sm:text-6xl md:text-7xl lg:text-[5.4rem]">
+                    A LIVE <span class="highlight-white">JÁ VAI</span><br>
+                    COMEÇAR
+                </h1>
+                <!-- Glitch Clone 1 (Blood Red) -->
+                <div aria-hidden="true" class="berserk-glitch-layer glitch-red text-4xl sm:text-6xl md:text-7xl lg:text-[5.4rem]">
+                    A LIVE JÁ VAI<br>COMEÇAR
+                </div>
+                <!-- Glitch Clone 2 (Sharp White) -->
+                <div aria-hidden="true" class="berserk-glitch-layer glitch-white text-4xl sm:text-6xl md:text-7xl lg:text-[5.4rem]">
+                    A LIVE JÁ VAI<br>COMEÇAR
+                </div>
+            </div>
+
+            <!-- Crimson Slash Divider -->
+            <div class="blood-slash-bar rounded-full my-1"></div>
+
+            <!-- Streamer Handle (@morettizw) -->
+            <div class="pt-1 flex items-center justify-center space-x-3">
+                <span class="inline-block w-2.5 h-2.5 rotate-45 bg-[#ff1a1a] shadow-[0_0_12px_#ff1a1a]"></span>
+                <p class="streamer-handle text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
+                    @morettizw
+                </p>
+                <span class="inline-block w-2.5 h-2.5 rotate-45 bg-[#ff1a1a] shadow-[0_0_12px_#ff1a1a]"></span>
+            </div>
+
+        </section>
+
+        <!-- CENTER SECTION: Pulsing Brand of Sacrifice Emblem -->
+        <section id="center-brand-zone" class="w-full flex items-center justify-center relative pointer-events-none my-auto z-20">
+            
+            <div class="center-brand-float relative flex items-center justify-center">
+                <!-- Pulsing Brand of Sacrifice Emblem -->
+                <svg id="brand-emblem" class="w-36 h-52 sm:w-48 sm:h-72 md:w-56 md:h-80 brand-sacrifice-svg z-10" viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Outer Dark Aura Stroke -->
+                    <path d="M60 10V170M60 10L26 48L60 86L94 48L60 10ZM60 86L24 128L60 162L96 128L60 86ZM26 48V86M94 48V86" 
+                          stroke="#3a0000" stroke-width="13" stroke-linecap="square" stroke-linejoin="miter"/>
+                    <!-- Core Blood Red Brand -->
+                    <path d="M60 10V170M60 10L26 48L60 86L94 48L60 10ZM60 86L24 128L60 162L96 128L60 86ZM26 48V86M94 48V86" 
+                          stroke="#d90000" stroke-width="7" stroke-linecap="square" stroke-linejoin="miter"/>
+                    <!-- White Inner Edge Highlight -->
+                    <path d="M60 14V166M60 14L29 48L60 83L91 48L60 14ZM60 89L27 128L60 159L93 128L60 89Z" 
+                          stroke="#ffcccc" stroke-opacity="0.7" stroke-width="1.6" stroke-linecap="square"/>
+                </svg>
+            </div>
+
+        </section>
+
+        <!-- LOWER SECTION: Open Dark Fantasy Framing Space (For Guts PNG, Webcam, or Chat Box in TikTok Studio) -->
+        <section class="w-full h-[30%] flex flex-col items-center justify-end pointer-events-none z-10"></section>
+
+    </main>
+
+    <!-- Streamer Control Panel (Auto-fades when not hovered; press 'H' to completely hide) -->
+    <aside id="control-dock" class="bg-zinc-950/90 border border-red-900/60 rounded-lg px-3.5 py-2.5 shadow-[0_0_25px_rgba(0,0,0,0.95)] backdrop-blur-sm flex flex-wrap items-center justify-center gap-2 text-xs">
+        <span class="text-zinc-400 uppercase tracking-wider font-semibold hidden sm:inline">Modo:</span>
+        
+        <button id="btn-eclipse-mode" onclick="setOverlayMode('eclipse')" 
+                class="px-3 py-1.5 rounded bg-red-950 border border-red-600 text-white font-semibold tracking-wide transition hover:bg-red-800 cursor-pointer">
+            Eclipse (Preto)
+        </button>
+        
+        <button id="btn-transparent-mode" onclick="setOverlayMode('transparent')" 
+                class="px-3 py-1.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-semibold tracking-wide transition hover:border-red-700 hover:text-white cursor-pointer">
+            Transparente
+        </button>
+
+        <button id="btn-toggle-brand" onclick="toggleBrandCenter()" 
+                title="Ocultar marca central para sobrepor a arte do Guts"
+                class="px-2.5 py-1.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-semibold transition hover:border-red-700 hover:text-white cursor-pointer">
+            Marca: ON
+        </button>
+
+        <button onclick="hideControlsCompletely()" 
+                title="Ocultar menu (Pressione H para mostrar novamente)"
+                class="px-2 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-red-400 transition cursor-pointer">
+            ✕
+        </button>
+    </aside>
+
+    <script>
+        /**
+         * Berserk Vertical 9:16 (1080x1920) Dark Fantasy Atmospheric Engine
+         * Renders volumetric red mist, rising burning ash embers,
+         * top crimson Eclipse corona behind the title, dripping blood energy from
+         * the Brand of Sacrifice, and dark red energy tendrils swirling in the lower frame.
+         */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        let isTransparentMode = false;
+        let showCenterBrand = true;
+
+        // Resize handler to maintain crisp 1080x1920 / responsive vertical rendering
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initSmokePuffs();
+            initLowerTendrils();
+        });
+
+        // URL Query Parameter Support (?transparent=1&nobrand=1&hideui=1)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('transparent') === '1') {
+            setOverlayMode('transparent');
+        }
+        if (urlParams.get('nobrand') === '1') {
+            toggleBrandCenter();
+        }
+        if (urlParams.get('hideui') === '1') {
+            document.getElementById('control-dock').classList.add('hidden-ui');
+        }
+
+        // Toggle between Pitch Black Eclipse Mode and Transparent Mode
+        function setOverlayMode(mode) {
+            const btnEclipse = document.getElementById('btn-eclipse-mode');
+            const btnTrans = document.getElementById('btn-transparent-mode');
+
+            if (mode === 'transparent') {
+                isTransparentMode = true;
+                document.body.classList.add('obs-transparent');
+                btnTrans.className = "px-3 py-1.5 rounded bg-red-950 border border-red-600 text-white font-semibold tracking-wide transition hover:bg-red-800 cursor-pointer";
+                btnEclipse.className = "px-3 py-1.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-semibold tracking-wide transition hover:border-red-700 hover:text-white cursor-pointer";
+            } else {
+                isTransparentMode = false;
+                document.body.classList.remove('obs-transparent');
+                btnEclipse.className = "px-3 py-1.5 rounded bg-red-950 border border-red-600 text-white font-semibold tracking-wide transition hover:bg-red-800 cursor-pointer";
+                btnTrans.className = "px-3 py-1.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-semibold tracking-wide transition hover:border-red-700 hover:text-white cursor-pointer";
+            }
+        }
+
+        // Toggle center Brand of Sacrifice so streamer can layer Guts art cleanly
+        function toggleBrandCenter() {
+            showCenterBrand = !showCenterBrand;
+            const zone = document.getElementById('center-brand-zone');
+            const btn = document.getElementById('btn-toggle-brand');
+            zone.style.opacity = showCenterBrand ? '1' : '0';
+            zone.style.transition = 'opacity 0.35s ease';
+            btn.textContent = showCenterBrand ? 'Marca: ON' : 'Marca: OFF';
+        }
+
+        function hideControlsCompletely() {
+            document.getElementById('control-dock').classList.add('hidden-ui');
+        }
+
+        // Keyboard shortcut 'H' to toggle control panel visibility
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'h') {
+                document.getElementById('control-dock').classList.toggle('hidden-ui');
+            }
+        });
+
+        // ==========================================
+        // 1. VOLUMETRIC CRIMSON SMOKE / MIST SYSTEM
+        // ==========================================
+        let smokePuffs = [];
+        const SMOKE_COUNT = 26;
+
+        class SmokePuff {
+            constructor() {
+                this.reset(true);
+            }
+
+            reset(initial = false) {
+                this.x = Math.random() * width;
+                this.y = initial ? Math.random() * height : height + Math.random() * 220;
+                this.radius = Math.max(width, height) * (0.14 + Math.random() * 0.16);
+                this.vx = (Math.random() - 0.5) * 0.35;
+                this.vy = -(0.18 + Math.random() * 0.32);
+                this.alpha = 0.045 + Math.random() * 0.065;
+                this.phase = Math.random() * Math.PI * 2;
+                this.isDarkShadow = Math.random() > 0.62;
+            }
+
+            update(time) {
+                this.y += this.vy;
+                this.x += this.vx + Math.sin(time * 0.0007 + this.phase) * 0.25;
+
+                if (this.y + this.radius < -120) {
+                    this.reset(false);
+                }
+            }
+
+            draw() {
+                const grad = ctx.createRadialGradient(
+                    this.x, this.y, this.radius * 0.05,
+                    this.x, this.y, this.radius
+                );
+
+                if (this.isDarkShadow && !isTransparentMode) {
+                    grad.addColorStop(0, `rgba(10, 0, 0, ${this.alpha * 1.4})`);
+                    grad.addColorStop(0.6, `rgba(25, 0, 0, ${this.alpha * 0.7})`);
+                    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                } else {
+                    const effectiveAlpha = isTransparentMode ? this.alpha * 0.78 : this.alpha;
+                    grad.addColorStop(0, `rgba(179, 0, 0, ${effectiveAlpha})`);
+                    grad.addColorStop(0.5, `rgba(100, 0, 0, ${effectiveAlpha * 0.55})`);
+                    grad.addColorStop(1, 'rgba(40, 0, 0, 0)');
+                }
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initSmokePuffs() {
+            smokePuffs = [];
+            for (let i = 0; i < SMOKE_COUNT; i++) {
+                smokePuffs.push(new SmokePuff());
+            }
+        }
+
+        // ==========================================
+        // 2. FLOATING ASH & BLOOD EMBERS SYSTEM
+        // ==========================================
+        const embers = [];
+        const EMBER_COUNT = 105;
+
+        class AshEmber {
+            constructor() {
+                this.reset(true);
+            }
+
+            reset(initial = false) {
+                this.x = Math.random() * width;
+                this.y = initial ? Math.random() * height : height + Math.random() * 60;
+                this.size = 1.2 + Math.random() * 2.8;
+                this.vy = -(0.45 + Math.random() * 1.35);
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.swaySpeed = 0.001 + Math.random() * 0.0025;
+                this.swayAmp = 0.35 + Math.random() * 0.95;
+                this.phase = Math.random() * Math.PI * 2;
+                this.type = Math.random();
+                this.alpha = 0.35 + Math.random() * 0.65;
+            }
+
+            update(time) {
+                this.y += this.vy;
+                this.x += this.vx + Math.sin(time * this.swaySpeed + this.phase) * this.swayAmp;
+
+                if (this.y < -20 || this.x < -30 || this.x > width + 30) {
+                    this.reset(false);
+                }
+            }
+
+            draw(time) {
+                const flicker = 0.75 + 0.25 * Math.sin(time * 0.006 + this.phase);
+                ctx.save();
+                ctx.globalAlpha = this.alpha * flicker;
+
+                if (this.type > 0.32) {
+                    ctx.fillStyle = this.type > 0.85 ? '#ffcccc' : '#ff1a1a';
+                    ctx.shadowColor = '#ff0000';
+                    ctx.shadowBlur = 8;
+                } else {
+                    ctx.fillStyle = '#52525b';
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.translate(this.x, this.y);
+                ctx.rotate(Math.sin(time * 0.002 + this.phase) * 0.6);
+                ctx.fillRect(-this.size / 2, -this.size, this.size, this.size * 1.6);
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < EMBER_COUNT; i++) {
+            embers.push(new AshEmber());
+        }
+
+        // ==========================================
+        // 3. DRIPPING BLOOD ENERGY FROM CENTER BRAND
+        // ==========================================
+        const brandDrips = [];
+        const DRIP_COUNT = 22;
+
+        class BrandBloodDrip {
+            constructor() {
+                this.reset(true);
+            }
+
+            reset(initial = false) {
+                const brandCenterX = width * 0.5;
+                const brandCenterY = height * 0.51;
+                const spreadX = Math.min(width * 0.14, 95);
+                this.x = brandCenterX + (Math.random() - 0.5) * spreadX;
+                this.startY = brandCenterY + (Math.random() - 0.3) * 80;
+                this.y = initial ? this.startY + Math.random() * (height * 0.35) : this.startY;
+                this.vy = 0.65 + Math.random() * 1.4;
+                this.length = 8 + Math.random() * 22;
+                this.radius = 1.2 + Math.random() * 2.0;
+                this.alpha = 0.5 + Math.random() * 0.5;
+                this.life = 0;
+                this.maxLife = 140 + Math.random() * 160;
+            }
+
+            update() {
+                if (!showCenterBrand) return;
+                this.y += this.vy;
+                this.vy *= 1.006; // subtle gravity pull
+                this.life++;
+
+                if (this.life > this.maxLife || this.y > height + 30) {
+                    this.reset(false);
+                }
+            }
+
+            draw() {
+                if (!showCenterBrand) return;
+                const lifeRatio = 1 - (this.life / this.maxLife);
+                ctx.save();
+                ctx.globalAlpha = this.alpha * lifeRatio;
+
+                const grad = ctx.createLinearGradient(this.x, this.y - this.length, this.x, this.y);
+                grad.addColorStop(0, 'rgba(179, 0, 0, 0)');
+                grad.addColorStop(0.7, 'rgba(220, 0, 0, 0.85)');
+                grad.addColorStop(1, '#ff1a1a');
+
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = this.radius * 1.2;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - this.length);
+                ctx.lineTo(this.x, this.y);
+                ctx.stroke();
+
+                // Glowing blood droplet tip
+                ctx.fillStyle = '#ff1a1a';
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < DRIP_COUNT; i++) {
+            brandDrips.push(new BrandBloodDrip());
+        }
+
+        // ==========================================
+        // 4. TOP ECLIPSE CORONA & LOWER ENERGY TENDRILS
+        // ==========================================
+        let lowerTendrils = [];
+        const LOWER_TENDRIL_COUNT = 22;
+
+        class SwirlingEnergyTendril {
+            constructor(index) {
+                this.index = index;
+                this.reset();
+            }
+
+            reset() {
+                this.baseX = (this.index / LOWER_TENDRIL_COUNT) * width + (Math.random() - 0.5) * 40;
+                this.heightSpan = height * (0.22 + Math.random() * 0.24);
+                this.speed = 0.0012 + Math.random() * 0.0018;
+                this.phase = Math.random() * Math.PI * 2;
+                this.amp = 28 + Math.random() * 55;
+                this.thickness = 1.6 + Math.random() * 3.0;
+            }
+
+            draw(time) {
+                const startY = height + 10;
+                const endY = height - this.heightSpan - Math.sin(time * 0.0015 + this.phase) * 28;
+                const sway1 = Math.sin(time * this.speed + this.phase) * this.amp;
+                const sway2 = Math.cos(time * this.speed * 0.85 + this.phase) * (this.amp * 0.85);
+
+                const cp1X = this.baseX + sway1;
+                const cp1Y = startY - this.heightSpan * 0.35;
+                const cp2X = this.baseX - sway2;
+                const cp2Y = startY - this.heightSpan * 0.72;
+                const endX = this.baseX + sway1 * 0.4;
+
+                const grad = ctx.createLinearGradient(this.baseX, startY, endX, endY);
+                grad.addColorStop(0, 'rgba(220, 0, 0, 0.65)');
+                grad.addColorStop(0.5, 'rgba(150, 0, 0, 0.32)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = this.thickness;
+                ctx.beginPath();
+                ctx.moveTo(this.baseX, startY);
+                ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, endX, endY);
+                ctx.stroke();
+            }
+        }
+
+        function initLowerTendrils() {
+            lowerTendrils = [];
+            for (let i = 0; i < LOWER_TENDRIL_COUNT; i++) {
+                lowerTendrils.push(new SwirlingEnergyTendril(i));
+            }
+        }
+
+        function drawTopEclipseCorona(time) {
+            // Positioned behind the top Gothic Typography
+            const cx = width * 0.5;
+            const cy = height * 0.21;
+            const baseRadius = Math.min(width * 0.34, height * 0.17);
+            const pulse = 1 + Math.sin(time * 0.0018) * 0.032;
+            const r = baseRadius * pulse;
+
+            // Outer Crimson Corona Glow
+            const coronaGrad = ctx.createRadialGradient(cx, cy, r * 0.7, cx, cy, r * 2.1);
+            coronaGrad.addColorStop(0, 'rgba(210, 0, 0, 0.34)');
+            coronaGrad.addColorStop(0.35, 'rgba(145, 0, 0, 0.16)');
+            coronaGrad.addColorStop(0.7, 'rgba(65, 0, 0, 0.05)');
+            coronaGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = coronaGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * 2.1, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pitch-Black Eclipse Disc with Razor Blood & White Rim
+            if (!isTransparentMode) {
+                ctx.save();
+                ctx.shadowColor = '#ff1a1a';
+                ctx.shadowBlur = 32;
+                ctx.fillStyle = '#020202';
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.94, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 35, 35, 0.85)';
+                ctx.lineWidth = 2.6;
+                ctx.stroke();
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+                ctx.lineWidth = 1.0;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.946, -0.5, 0.9);
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                // Subtle glowing ring in Transparent Mode
+                ctx.save();
+                ctx.strokeStyle = 'rgba(225, 0, 0, 0.38)';
+                ctx.lineWidth = 2.2;
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 18;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r * 0.94, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // ==========================================
+        // MAIN ANIMATION LOOP
+        // ==========================================
+        initSmokePuffs();
+        initLowerTendrils();
+
+        function animate(time) {
+            ctx.clearRect(0, 0, width, height);
+
+            // Base Pitch-Black Void (only when not in Transparent Mode)
+            if (!isTransparentMode) {
+                ctx.fillStyle = '#030303';
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            // Layer 1: Slow volumetric crimson smoke & dark shadows
+            for (let i = 0; i < smokePuffs.length; i++) {
+                smokePuffs[i].update(time);
+                smokePuffs[i].draw();
+            }
+
+            // Layer 2: Top glowing crimson Eclipse behind the title
+            drawTopEclipseCorona(time);
+
+            // Layer 3: Dripping blood energy particles below the center Brand of Sacrifice
+            for (let i = 0; i < brandDrips.length; i++) {
+                brandDrips[i].update();
+                brandDrips[i].draw();
+            }
+
+            // Layer 4: Dark red energy tendrils swirling around the lower frame
+            for (let i = 0; i < lowerTendrils.length; i++) {
+                lowerTendrils[i].draw(time);
+            }
+
+            // Layer 5: Floating ash particles & glowing blood embers rising from bottom
+            for (let i = 0; i < embers.length; i++) {
+                embers[i].update(time);
+                embers[i].draw(time);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = function () {
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+</html>
